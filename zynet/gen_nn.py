@@ -7,7 +7,7 @@ from os import path
 sourceFilePath = "./src/fpga/rtl/"
 tbFilePath = "./src/fpga/tb/"
 
-def writeIncludeFile(pretrained,numDenseLayers,dataWidth,layers):
+def writeIncludeFile(pretrained,numDenseLayers,dataWidth,layers,sigmoidSize,weightIntSize):
     # Create target Directory if don't exist
     if not os.path.exists(sourceFilePath):
         os.makedirs(sourceFilePath)
@@ -23,8 +23,8 @@ def writeIncludeFile(pretrained,numDenseLayers,dataWidth,layers):
         f.write("`define numNeuronLayer%d %d\n"%(i,layers[i].getNumNeurons()))
         f.write("`define numWeightLayer%d %d\n"%(i,layers[i-1].getNumNeurons()))
         f.write('`define Layer%dActType "%s"\n'%(i,layers[i].getActivation()))
-    f.write('`define sigmoidSize %d\n'%(5))
-    f.write('`define weightIntWidth %d\n'%(1))
+    f.write('`define sigmoidSize %d\n'%(sigmoidSize))
+    f.write('`define weightIntWidth %d\n'%(weightIntSize))
     f.close()
     
     resources_dir = path.join(path.dirname(__file__), 'db/axi_lite_wrapper.v')
@@ -65,7 +65,7 @@ def genLayer(layerNum,numNeurons,actType):
 def gentb():
     copyfile(path.join(path.dirname(__file__), 'db/top_sim.v'), tbFilePath+'top_sim.v')
     
-def gen_nn(numLayers=0,layers=[],dataWidth=0,pretrained='Yes',weights=[],biases=[]):
+def gen_nn(numLayers=0,layers=[],dataWidth=0,pretrained='Yes',weights=[],biases=[],sigmoidSize=5,weightIntSize=1,inputIntSize=4):
     #Sanity checks
     if numLayers != len(layers):
         print("Error:Number of specified layers does not match with the layers provided")
@@ -91,7 +91,7 @@ def gen_nn(numLayers=0,layers=[],dataWidth=0,pretrained='Yes',weights=[],biases=
             if layer.type == "Dense": 
                 i += 1 
             
-    writeIncludeFile(pretrained,i,dataWidth,layers)     #Write the include file
+    writeIncludeFile(pretrained,i,dataWidth,layers,sigmoidSize,weightIntSize)     #Write the include file
         
     f = open(sourceFilePath+"zynet.v","w")
     g = open(path.join(path.dirname(__file__),"db/moduleTemplate"))
@@ -185,4 +185,44 @@ end\n\n"%(i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i))
     
     
     gentb()
-
+    
+    
+    f = open(sourceFilePath+"sigContent.mif","w")
+    
+    def DtoB(num,dataWidth,fracBits):#funtion for converting into two's complement format
+        if num >= 0:
+            num = num * (2**fracBits)
+            num = int(num)
+            e = bin(num)[2:]
+        else:
+            num = -num
+            num = num * (2**fracBits)#number of fractional bits
+            num = int(num)
+            if num == 0:
+                d = 0
+            else:
+                d = 2**dataWidth - num
+            e = bin(d)[2:]
+        return e
+    
+    
+    def sigmoid(x):
+        return 1 / (1+math.exp(-x))
+        
+    if sigmoidSize >= weightIntSize+inputIntSize:
+        stepSize = 2**(weightIntSize+inputIntSize)*1.0/(2**sigmoidSize)
+    else:  #lower bits of input to the sigmoid LUT larger than sigmoidSize is dropped
+        stepSize = 1*1.0
+    
+    
+    #Generating Sigmoid LUT content
+    for i in range(0,2**sigmoidSize):
+        if sigmoidSize >= weightIntSize+inputIntSize:
+            x = stepSize*i-2**(weightIntSize+inputIntSize-1)
+        else:
+            x = stepSize*i-2**(sigmoidSize-1)
+        y = sigmoid(x)
+        z = DtoB(y,dataWidth,dataWidth-inputIntSize)
+        f.write(z+'\n')
+        
+    f.close()

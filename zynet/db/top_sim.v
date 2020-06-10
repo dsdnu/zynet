@@ -333,16 +333,10 @@ module top_sim(
             fileName[11] = "a";
             fileName[12] = "d";
             fileName[13] = "_";
-            fileName[14] = "n";
-            fileName[15] = "o";
-            fileName[16] = "i";
+            fileName[14] = "t";
+            fileName[15] = "s";
+            fileName[16] = "e";
             fileName[17] = "t";
-            fileName[18] = "a";
-            fileName[19] = "d";
-            fileName[20] = "i";
-            fileName[21] = "l";
-            fileName[22] = "a";
-            fileName[23] = "v";
             sendData();
             @(posedge intr);
             //readAxi(24);
@@ -350,7 +344,7 @@ module top_sim(
             readAxi(8);
             if(axiRdData==expected)
                 right = right+1;
-            $display("Accuracy: %f, Detected number: %0x, Expected: %x",right*100.0/(testDataCount+1),axiRdData,expected);
+            $display("%0d. Accuracy: %f, Detected number: %0x, Expected: %x",testDataCount+1,right*100.0/(testDataCount+1),axiRdData,expected);
             /*$display("Total execution time",,,,$time-start,,"ns");
             j=0;
             repeat(10)
@@ -360,7 +354,7 @@ module top_sim(
                 j=j+1;
             end*/
         end
-        $display("Accuracy: %f",right*100.0/10000);
+        $display("Accuracy: %f",right*100.0/testDataCount);
         $stop;
     end
 

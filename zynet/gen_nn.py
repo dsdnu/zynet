@@ -188,24 +188,17 @@ end\n\n"%(i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i))
     
     
     f = open(sourceFilePath+"sigContent.mif","w")
-    
-    print(sigmoidSize)
-
-    if sigmoidSize >= weightIntSize+inputIntSize:
-        stepSize = 2**(weightIntSize+inputIntSize)*1.0/(2**sigmoidSize)
-    else:  #lower bits of input to the sigmoid LUT larger than sigmoidSize is dropped
-        stepSize = 1*1.0
-    
-    
+        
+    fractBits = sigmoidSize-(weightIntSize+inputIntSize) 
+    if fractBits < 0: #Sigmoid size is smaller the integer part of the MAC operation
+        fractBits = 0
     #Generating Sigmoid LUT content
+    x = -2**(weightIntSize+inputIntSize-1)#Smallest input going to the Sigmoid LUT from the neuron
     for i in range(0,2**sigmoidSize):
-        if sigmoidSize >= weightIntSize+inputIntSize:
-            x = stepSize*i-2**(weightIntSize+inputIntSize-1)
-        else:
-            x = stepSize*i-2**(sigmoidSize-1)
         y = sigmoid(x)
         z = DtoB(y,dataWidth,dataWidth-inputIntSize)
         f.write(z+'\n')
+        x=x+(2**-fractBits)
         
     f.close()
 
@@ -227,4 +220,7 @@ def DtoB(num,dataWidth,fracBits):#funtion for converting into two's complement f
     
     
 def sigmoid(x):
-    return 1 / (1+math.exp(-x))
+    try:
+        return 1 / (1+math.exp(-x))
+    except:
+        return 0

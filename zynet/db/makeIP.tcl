@@ -1,5 +1,5 @@
 open_project [lindex $argv 0]
-ipx::package_project -root_dir e:/research/zynet/sample/src/fpga -vendor VIP -library user -taxonomy /UserIP
+ipx::package_project -root_dir ./src/fpga -vendor VIP -library user -taxonomy /UserIP
 ipx::add_bus_interface axis_data [ipx::current_core]
 set_property abstraction_type_vlnv xilinx.com:interface:axis_rtl:1.0 [ipx::get_bus_interfaces axis_data -of_objects [ipx::current_core]]
 set_property bus_type_vlnv xilinx.com:interface:axis:1.0 [ipx::get_bus_interfaces axis_data -of_objects [ipx::current_core]]

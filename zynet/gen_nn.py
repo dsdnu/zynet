@@ -65,7 +65,7 @@ def genLayer(layerNum,numNeurons,actType):
 def gentb():
     copyfile(path.join(path.dirname(__file__), 'db/top_sim.v'), tbFilePath+'top_sim.v')
     
-def gen_nn(numLayers=0,layers=[],dataWidth=0,pretrained='Yes',weights=[],biases=[],sigmoidSize=5,weightIntSize=1,inputIntSize=4):
+def gen_nn(numLayers=0,layers=[],dataWidth=0,pretrained='Yes',weights=[],biases=[],sigmoidSize=10,weightIntSize=1,inputIntSize=4):
     #Sanity checks
     if numLayers != len(layers):
         print("Error:Number of specified layers does not match with the layers provided")
@@ -189,26 +189,8 @@ end\n\n"%(i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i))
     
     f = open(sourceFilePath+"sigContent.mif","w")
     
-    def DtoB(num,dataWidth,fracBits):#funtion for converting into two's complement format
-        if num >= 0:
-            num = num * (2**fracBits)
-            num = int(num)
-            e = bin(num)[2:]
-        else:
-            num = -num
-            num = num * (2**fracBits)#number of fractional bits
-            num = int(num)
-            if num == 0:
-                d = 0
-            else:
-                d = 2**dataWidth - num
-            e = bin(d)[2:]
-        return e
-    
-    
-    def sigmoid(x):
-        return 1 / (1+math.exp(-x))
-        
+    print(sigmoidSize)
+
     if sigmoidSize >= weightIntSize+inputIntSize:
         stepSize = 2**(weightIntSize+inputIntSize)*1.0/(2**sigmoidSize)
     else:  #lower bits of input to the sigmoid LUT larger than sigmoidSize is dropped
@@ -226,3 +208,23 @@ end\n\n"%(i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i))
         f.write(z+'\n')
         
     f.close()
+
+def DtoB(num,dataWidth,fracBits):#funtion for converting into two's complement format
+    if num >= 0:
+        num = num * (2**fracBits)
+        num = int(num)
+        e = bin(num)[2:]
+    else:
+        num = -num
+        num = num * (2**fracBits)#number of fractional bits
+        num = int(num)
+        if num == 0:
+            d = 0
+        else:
+            d = 2**dataWidth - num
+        e = bin(d)[2:]
+    return e
+    
+    
+def sigmoid(x):
+    return 1 / (1+math.exp(-x))

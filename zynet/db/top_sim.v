@@ -21,6 +21,8 @@
 
 `include "..\rtl\include.v"
 
+`define MaxTestSamples 100
+
 module top_sim(
 
     );
@@ -307,7 +309,7 @@ module top_sim(
         `endif
         $display("Configuration completed",,,,$time-start,,"ns");
         start = $time;
-        for(testDataCount=0;testDataCount<10000;testDataCount=testDataCount+1)
+        for(testDataCount=0;testDataCount<`MaxTestSamples;testDataCount=testDataCount+1)
         begin
             testDataCount_int = testDataCount;
             fileName[0] = "t";
